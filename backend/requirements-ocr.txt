@@ -1,0 +1,3 @@
+easyocr
+PyMuPDF
+python-dateutil
