@@ -65,11 +65,10 @@ def start_application(request, scholarship_id):
         from notifications.models import Notification
         Notification.objects.create(
             user=request.user,
-            notification_type='SYSTEM',
+            notification_type='APPLICATION_CREATED',
             title='Application Started',
             message=f'{scholarship.name} has been added to your application tracker.',
-            related_entity_type='application',
-            related_entity_id=app.id
+            related_application=app
         )
         
         # Trigger status notification logic which will add missing doc notifications if any

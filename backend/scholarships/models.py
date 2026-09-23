@@ -3,22 +3,33 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class Scholarship(models.fields.related.OneToOneField):
-    pass
 
 class Scholarship(models.Model):
     name = models.CharField(max_length=255)
     provider = models.CharField(max_length=255)
     description = models.TextField()
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    deadline = models.DateField()
-    application_url = models.URLField(max_length=500, null=True, blank=True)
+    deadline = models.DateField(null=True, blank=True)
+    official_application_url = models.URLField(max_length=500, null=True, blank=True)
+    application_type = models.CharField(max_length=50, null=True, blank=True)
     
     # Base Categorization
     category = models.CharField(max_length=100, null=True, blank=True)
     scholarship_type = models.CharField(max_length=100, null=True, blank=True) # Merit, Need-based, Government, etc.
     provider_type = models.CharField(max_length=100, null=True, blank=True)
     official_source = models.BooleanField(default=True)
+    
+    # Source Verification Metadata
+    official_scheme_url = models.URLField(max_length=500, null=True, blank=True)
+    source_name = models.CharField(max_length=255, null=True, blank=True)
+    VERIFICATION_CHOICES = (
+        ('VERIFIED_OFFICIAL', 'Verified Official'),
+        ('VERIFIED_SOURCE', 'Verified Source'),
+        ('DEMO_DATA', 'Demo Data'),
+    )
+    verification_status = models.CharField(max_length=50, choices=VERIFICATION_CHOICES, default='DEMO_DATA')
+    last_verified_at = models.DateField(null=True, blank=True)
+    academic_year = models.CharField(max_length=20, null=True, blank=True)
     
     last_updated = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)

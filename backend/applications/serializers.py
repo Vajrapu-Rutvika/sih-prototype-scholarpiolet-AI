@@ -26,8 +26,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     match_score = serializers.SerializerMethodField()
     eligibility_status = serializers.SerializerMethodField()
-    reasons = serializers.SerializerMethodField()
-    gaps = serializers.SerializerMethodField()
+    matched_criteria = serializers.SerializerMethodField()
+    unmet_criteria = serializers.SerializerMethodField()
+    missing_information = serializers.SerializerMethodField()
     required_documents = serializers.SerializerMethodField()
     uploaded_documents = serializers.SerializerMethodField()
     missing_documents = serializers.SerializerMethodField()
@@ -43,7 +44,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'scholarship', 'scholarship_details', 'status', 'progress',
             'created_at', 'updated_at', 'checklists', 'history',
-            'match_score', 'eligibility_status', 'reasons', 'gaps',
+            'match_score', 'eligibility_status', 'matched_criteria', 'unmet_criteria', 'missing_information',
             'required_documents', 'uploaded_documents', 'missing_documents',
             'document_readiness', 'blockers', 'acceptance_improvements',
             'next_action', 'days_remaining', 'deadline_priority'
@@ -67,8 +68,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
                 'category_scores': {},
                 'eligibility_percentage': 70,
                 'eligibility_status': 'NEEDS_VERIFICATION',
-                'reasons': ['Base criteria matched'],
-                'gaps': ['Profile incomplete']
+                'matched_criteria': ['Base criteria matched'],
+                'missing_information': ['Profile incomplete'],
+                'unmet_criteria': []
             }
 
         # Parse required documents
@@ -110,8 +112,8 @@ class ApplicationSerializer(serializers.ModelSerializer):
         if unverified:
             blockers.append(f"{len(unverified)} uploaded document(s) pending verification ({', '.join(unverified)})")
 
-        if details.get('gaps'):
-            for g in details['gaps']:
+        if details.get('unmet_criteria'):
+            for g in details['unmet_criteria']:
                 blockers.append(g)
 
         today = date.today()
@@ -170,11 +172,14 @@ class ApplicationSerializer(serializers.ModelSerializer):
     def get_eligibility_status(self, obj):
         return self._get_analysis(obj)['details'].get('eligibility_status', 'ELIGIBLE')
 
-    def get_reasons(self, obj):
-        return self._get_analysis(obj)['details'].get('reasons', [])
+    def get_matched_criteria(self, obj):
+        return self._get_analysis(obj)['details'].get('matched_criteria', [])
 
-    def get_gaps(self, obj):
-        return self._get_analysis(obj)['details'].get('gaps', [])
+    def get_unmet_criteria(self, obj):
+        return self._get_analysis(obj)['details'].get('unmet_criteria', [])
+
+    def get_missing_information(self, obj):
+        return self._get_analysis(obj)['details'].get('missing_information', [])
 
     def get_required_documents(self, obj):
         return self._get_analysis(obj)['req_docs']

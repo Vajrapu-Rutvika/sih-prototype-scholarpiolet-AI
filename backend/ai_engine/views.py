@@ -111,7 +111,7 @@ def get_matched_scholarships(request):
             'scholarship_type': scholarship.scholarship_type or 'General',
             'amount': f"₹{scholarship.amount:,.0f}" if scholarship.amount else 'Variable',
             'amount_numeric': float(scholarship.amount) if scholarship.amount else 0,
-            'deadline': scholarship.deadline.strftime('%Y-%m-%d') if scholarship.deadline else 'Open',
+            'deadline': scholarship.deadline.strftime('%Y-%m-%d') if scholarship.deadline else 'Deadline not verified — please check the official source',
             'days_remaining': days_remaining,
             'match_score': score,
             'eligibility_percentage': details.get('eligibility_percentage', 100),

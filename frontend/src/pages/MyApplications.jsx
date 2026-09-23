@@ -188,7 +188,7 @@ const MyApplications = () => {
                     <div className="flex items-center justify-between gap-2 mb-3">
                       {getStatusBadge(app.status)}
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-                        {app.match_score || 80}% Match
+                        {app.match_score !== null && app.match_score !== undefined ? `${app.match_score}% Match` : 'Match N/A'}
                       </span>
                     </div>
 
@@ -207,11 +207,11 @@ const MyApplications = () => {
                   <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/80 space-y-2">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500">Deadline:</span>
-                      <span className="font-semibold text-amber-600 dark:text-amber-400">{sch.deadline || 'Open'}</span>
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">{app.scholarship_details?.deadline || 'Deadline not verified'}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500">Doc Readiness:</span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{app.document_readiness || 100}%</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{app.document_readiness !== null && app.document_readiness !== undefined ? `${app.document_readiness}%` : 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ const MyApplications = () => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900/50">
                 <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase">Match Score</span>
-                <p className="text-2xl font-extrabold text-blue-700 dark:text-blue-300 mt-0.5">{selectedApp.match_score || 80}%</p>
+                <p className="text-2xl font-extrabold text-blue-700 dark:text-blue-300 mt-0.5">{selectedApp.match_score !== null && selectedApp.match_score !== undefined ? `${selectedApp.match_score}%` : 'N/A'}</p>
               </div>
               <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
                 <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Eligibility</span>
@@ -326,7 +326,7 @@ const MyApplications = () => {
               </div>
               <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
                 <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">Doc Readiness</span>
-                <p className="text-2xl font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5">{selectedApp.document_readiness || 100}%</p>
+                <p className="text-2xl font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5">{selectedApp.document_readiness !== null && selectedApp.document_readiness !== undefined ? `${selectedApp.document_readiness}%` : 'N/A'}</p>
               </div>
             </div>
 
@@ -336,7 +336,7 @@ const MyApplications = () => {
                 <TrendingUp size={14} className="text-blue-600" /> Why You Match This Scheme:
               </h4>
               <div className="space-y-1">
-                {selectedApp.reasons?.map((reason, idx) => (
+                {selectedApp.matched_criteria?.map((reason, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span>{reason}</span>
@@ -459,7 +459,7 @@ const MyApplications = () => {
             {/* MODAL FOOTER */}
             <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs font-semibold text-slate-500">
-                Deadline: <strong className="text-amber-600">{selectedApp.scholarship_details?.deadline || 'Open'}</strong>
+                Deadline: <strong className="text-amber-600">{selectedApp.scholarship_details?.deadline || 'Deadline not verified'}</strong>
               </span>
 
               <div className="flex gap-2">
@@ -469,14 +469,28 @@ const MyApplications = () => {
                 >
                   Close
                 </button>
-                {selectedApp.scholarship_details?.application_url && (
+                {selectedApp.scholarship_details?.official_scheme_url && (
                   <a
-                    href={selectedApp.application_url || selectedApp.scholarship_details.application_url}
+                    href={selectedApp.scholarship_details.official_scheme_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
+                  >
+                    Official Scholarship Source <ExternalLink size={14} />
+                  </a>
+                )}
+                {selectedApp.scholarship_details?.official_application_url && (
+                  <a
+                    href={selectedApp.scholarship_details.official_application_url}
                     target="_blank"
                     rel="noreferrer"
                     className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
                   >
-                    Apply on Official Portal <ExternalLink size={14} />
+                    {selectedApp.scholarship_details.application_type === 'DIRECT_FORM' ? 'Apply Now' :
+                     selectedApp.scholarship_details.application_type === 'LOGIN_PORTAL' ? 'Apply on Official Portal' :
+                     selectedApp.scholarship_details.application_type === 'NSP' ? 'Apply on National Scholarship Portal' :
+                     selectedApp.scholarship_details.application_type === 'JNANABHUMI' ? 'Apply on JnanaBhumi' :
+                     'Apply Officially'} <ExternalLink size={14} />
                   </a>
                 )}
               </div>

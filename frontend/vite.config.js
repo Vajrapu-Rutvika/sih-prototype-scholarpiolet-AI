@@ -4,6 +4,5 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/sih-prototype-scholarpiolet-AI/',
   plugins: [tailwindcss(), react()],
 })

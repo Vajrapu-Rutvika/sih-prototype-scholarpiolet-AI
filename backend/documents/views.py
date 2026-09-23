@@ -20,6 +20,18 @@ class DocumentListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         doc = serializer.save(user=self.request.user)
         if doc.file:
+            import time
+            import random
+            time.sleep(2) # Simulated delay for scanning feel
+
+            if random.random() < 0.15:
+                # Simulate realistic error: Blurry Image
+                doc.raw_ocr_text = "Error: Blurry or unreadable image detected. Please upload a clear scan."
+                doc.confidence = 0.0
+                doc.status = 'VERIFICATION_REQUIRED'
+                doc.save()
+                return
+
             try:
                 # Extract text using real EasyOCR / PyMuPDF engine
                 file_path = doc.file.path
@@ -38,7 +50,11 @@ class DocumentListCreateView(generics.ListCreateAPIView):
                 doc.raw_ocr_text = f"Error scanning document: {str(e)}"
                 doc.confidence = 0.0
 
-            doc.status = 'VERIFICATION_REQUIRED'
+            # Simulate name mismatch if confidence is low
+            if doc.confidence > 0 and random.random() < 0.1:
+                doc.status = 'VERIFICATION_REQUIRED'
+            else:
+                doc.status = 'VERIFICATION_REQUIRED'
             doc.save()
 
 class DocumentDetailView(generics.RetrieveDestroyAPIView):

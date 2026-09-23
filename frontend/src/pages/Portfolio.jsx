@@ -65,7 +65,7 @@ const Portfolio = () => {
 
             <div className="flex items-center gap-4 mb-4">
               <div className="w-20 h-20 rounded-full border-4 border-blue-600 flex items-center justify-center text-xl font-bold text-blue-600 dark:text-blue-400">
-                {readiness?.score || 100}%
+                {readiness?.score !== undefined && readiness?.score !== null ? readiness.score : 0}%
               </div>
               <div className="flex-1 text-sm text-slate-600 dark:text-slate-300">
                 <p className="font-medium">Uploaded Documents: {readiness?.uploaded?.length || 0}</p>

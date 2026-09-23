@@ -16,11 +16,18 @@ const FindScholarships = () => {
   const handleApplyAction = async (scholarshipId) => {
     setApplyingId(scholarshipId);
     try {
-      // Create or get application record
-      const response = await apiClient.post(`/applications/start/${scholarshipId}/`);
-      // response.data contains the application details
-      // Navigate to the applications page to manage it
-      navigate('/applications');
+      const targetScholarship = scholarships.find(s => s.scholarship_id === scholarshipId);
+      
+      // Fire backend API in background to track the application
+      apiClient.post(`/applications/start/${scholarshipId}/`).catch(err => console.error("Background tracking failed", err));
+
+      if (targetScholarship && targetScholarship.official_application_url) {
+        // External scholarship: Open directly
+        window.open(targetScholarship.official_application_url, '_blank');
+      } else {
+        // Internal application: navigate to tracker
+        navigate('/applications');
+      }
     } catch (err) {
       console.error("Error creating application:", err);
       setError(err.response?.data?.error || 'Failed to start application. Please try again.');
@@ -72,11 +79,14 @@ const FindScholarships = () => {
           provider: s.provider,
           category: s.category || 'General',
           amount: s.amount ? `₹${parseFloat(s.amount).toLocaleString('en-IN')}` : 'Variable',
-          deadline: s.deadline || 'Open',
-          match_score: 80,
-          eligibility_status: 'ELIGIBLE',
+          deadline: s.deadline || 'Deadline not verified — please check the official source',
+          application_type: s.application_type,
+          official_application_url: s.official_application_url,
+          official_scheme_url: s.official_scheme_url,
+          match_score: null,
+          eligibility_status: 'UNKNOWN',
           is_saved: false,
-          details: { reasons: ['Base profile criteria match'] }
+          details: { matched_criteria: [] }
         }));
         setScholarships(formatted);
       } catch (e) {
@@ -460,15 +470,21 @@ const FindScholarships = () => {
 
             <div className="border-t border-b border-slate-100 dark:border-slate-800 py-4 space-y-3">
               <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Profile Eligibility Analysis:</h4>
-              {selectedScholarship.details?.reasons?.map((reason, idx) => (
-                <div key={idx} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+              {selectedScholarship.details?.matched_criteria?.map((reason, idx) => (
+                <div key={`match-${idx}`} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
                   <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>{reason}</span>
                 </div>
               ))}
-              {selectedScholarship.details?.gaps?.map((gap, idx) => (
-                <div key={idx} className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+              {selectedScholarship.details?.missing_information?.map((gap, idx) => (
+                <div key={`miss-${idx}`} className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
                   <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <span>{gap} (Missing Information)</span>
+                </div>
+              ))}
+              {selectedScholarship.details?.unmet_criteria?.map((gap, idx) => (
+                <div key={`unmet-${idx}`} className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400">
+                  <X className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                   <span>{gap}</span>
                 </div>
               ))}
@@ -492,14 +508,28 @@ const FindScholarships = () => {
               >
                 Close
               </button>
-              {selectedScholarship.application_url && (
+              {selectedScholarship.official_scheme_url && (
                 <a
-                  href={selectedScholarship.application_url}
+                  href={selectedScholarship.official_scheme_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5"
                 >
-                  Official Portal <ExternalLink size={14} />
+                  Official Scholarship Source <ExternalLink size={14} />
+                </a>
+              )}
+              {selectedScholarship.official_application_url && (
+                <a
+                  href={selectedScholarship.official_application_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-5 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
+                >
+                  {selectedScholarship.application_type === 'DIRECT_FORM' ? 'Apply Now' :
+                   selectedScholarship.application_type === 'LOGIN_PORTAL' ? 'Apply on Official Portal' :
+                   selectedScholarship.application_type === 'NSP' ? 'Apply on National Scholarship Portal' :
+                   selectedScholarship.application_type === 'JNANABHUMI' ? 'Apply on JnanaBhumi' :
+                   'Apply Officially'} <ExternalLink size={14} />
                 </a>
               )}
               <button
@@ -613,7 +643,11 @@ function ScholarshipCard({ data, onSelect, onToggleSave, isSaving, onApplyAction
             className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1 disabled:opacity-50"
           >
             {isApplying ? '...' : 
-             data.eligibility_status === 'ELIGIBLE' ? 'APPLY NOW' : 
+             data.eligibility_status === 'ELIGIBLE' ? (
+                data.application_type === 'LOGIN_PORTAL' ? 'OPEN PORTAL' : 
+                data.application_type === 'NSP' ? 'APPLY ON NSP' : 
+                data.application_type === 'JNANABHUMI' ? 'APPLY ON JNANABHUMI' : 'APPLY NOW'
+             ) : 
              data.eligibility_status === 'NEEDS_VERIFICATION' ? 'REVIEW & APPLY' : 'VIEW WHY'}
           </button>
         </div>
