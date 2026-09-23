@@ -17,10 +17,13 @@
       "src": "/api/(.*)",
       "dest": "api/index.py"
     },
-    { "handle": "filesystem" },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/frontend/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/index.html"
     }
   ]
 }
