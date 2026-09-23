@@ -27,7 +27,7 @@ class Document(models.Model):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='documents')
     document_type = models.CharField(max_length=50, choices=DOCUMENT_TYPES)
-    file = models.FileField(upload_to='documents/%Y/%m/%d/', null=True, blank=True)
+    file_base64 = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='AVAILABLE')
     
     # Raw OCR Storage & Extracted Info

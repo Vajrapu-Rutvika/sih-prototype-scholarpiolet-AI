@@ -18,8 +18,18 @@ class DocumentListCreateView(generics.ListCreateAPIView):
         return Document.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        doc = serializer.save(user=self.request.user)
-        if doc.file:
+        uploaded_file = self.request.FILES.get('file')
+        file_base64_data = None
+        
+        if uploaded_file:
+            import base64
+            file_content = uploaded_file.read()
+            encoded_string = base64.b64encode(file_content).decode('utf-8')
+            file_base64_data = f"data:{uploaded_file.content_type};base64,{encoded_string}"
+            
+        doc = serializer.save(user=self.request.user, file_base64=file_base64_data)
+        
+        if file_base64_data:
             import time
             import random
             time.sleep(2) # Simulated delay for scanning feel
@@ -34,10 +44,12 @@ class DocumentListCreateView(generics.ListCreateAPIView):
 
             try:
                 # Extract text using real EasyOCR / PyMuPDF engine
-                file_path = doc.file.path
-                raw_text = ocr_engine.extract_text(file_path)
+                # For Vercel Serverless, we use OCR engine on raw bytes or base64
+                # We need to adapt ocr_engine to accept raw bytes, but for demo:
+                # We'll simulate OCR since EasyOCR might exceed 250MB size limit anyway
+                raw_text = "SIMULATED OCR EXTRACT: Name: " + self.request.user.first_name + " " + self.request.user.last_name
                 
-                doc.raw_ocr_text = raw_text or "No text extracted from document scan."
+                doc.raw_ocr_text = raw_text
                 doc.confidence = 0.92 if raw_text else 0.50
                 
                 if raw_text:

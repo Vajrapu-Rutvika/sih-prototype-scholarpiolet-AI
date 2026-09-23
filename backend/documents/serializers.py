@@ -2,10 +2,12 @@ from rest_framework import serializers
 from .models import Document
 
 class DocumentSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(write_only=True, required=False)
+
     class Meta:
         model = Document
         fields = '__all__'
-        read_only_fields = ['user', 'uploaded_at', 'updated_at', 'status']
+        read_only_fields = ['user', 'uploaded_at', 'updated_at', 'status', 'file_base64']
 
     def validate_file(self, value):
         if not value:
