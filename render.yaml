@@ -8,6 +8,7 @@ services:
   - type: web
     name: scholar-ai-backend
     env: python
+    rootDir: backend
     buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py seed_real_scholarships"
     startCommand: "gunicorn config.wsgi:application"
     envVars:
